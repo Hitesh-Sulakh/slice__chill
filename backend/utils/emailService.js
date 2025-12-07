@@ -1,34 +1,29 @@
 import nodemailer from 'nodemailer';
 import logger from './logger.js';
 
-// Create transporter based on environment
-const createTransporter = () => {
-  // For production, use actual SMTP settings
-  if (process.env.NODE_ENV === 'production') {
-    return nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT,
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
-  }
+// Transporter instance (created lazily)
+let transporter = null;
 
-  // For development, use Ethereal (fake SMTP service) or Gmail
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.ethereal.email',
-    port: process.env.SMTP_PORT || 587,
+// Create transporter based on environment (called lazily)
+const getTransporter = () => {
+  if (transporter) return transporter;
+  
+  // Log credentials status for debugging
+  logger.info(`SMTP Config - Host: ${process.env.SMTP_HOST}, User: ${process.env.SMTP_USER ? 'SET' : 'NOT SET'}, Pass: ${process.env.SMTP_PASS ? 'SET' : 'NOT SET'}`);
+  
+  transporter = nodemailer.createTransport({
+    service: 'gmail',
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: parseInt(process.env.SMTP_PORT) || 587,
     secure: false,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
   });
+  
+  return transporter;
 };
-
-const transporter = createTransporter();
 
 // Email templates
 const emailTemplates = {
@@ -202,7 +197,8 @@ export const sendEmail = async (to, template, data) => {
       html: emailContent.html,
     };
 
-    const info = await transporter.sendMail(mailOptions);
+    const emailTransporter = getTransporter();
+    const info = await emailTransporter.sendMail(mailOptions);
     logger.info(`Email sent successfully to ${to}: ${info.messageId}`);
 
     // In development, log the preview URL (Ethereal)
