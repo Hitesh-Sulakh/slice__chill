@@ -1,17 +1,31 @@
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
+import User from '../models/User.js';
 import logger from '../utils/logger.js';
+import { sendEmail } from '../utils/emailService.js';
 
 export const placeOrder = async (req, res) => {
   try {
     const { items, delivery_address } = req.body;
     const userId = req.user.id;
+    for(let i=0;i<items.length;i++){
+    console.log("all the items are here",items[i].name);
+    }
 
     // Validation
     if (!items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({
         success: false,
         message: 'Items must be a non-empty array',
+      });
+    }
+
+    // Get user details for email
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
       });
     }
 
@@ -77,9 +91,21 @@ export const placeOrder = async (req, res) => {
 
     logger.info(`Order placed successfully - Order ID: ${order._id}, User: ${userId}`);
 
+    // Send order confirmation email
+    try {
+      await sendEmail(user.email, 'orderConfirmation', {
+        username: user.username,
+        order: order,
+      });
+      logger.info(`Order confirmation email sent to: ${user.email}`);
+    } catch (emailError) {
+      logger.error(`Failed to send order confirmation email: ${emailError.message}`);
+      // Don't fail the order if email fails
+    }
+
     res.status(201).json({
       success: true,
-      message: 'Order placed successfully',
+      message: 'Order placed successfully. Confirmation email sent.',
       order_id: order._id,
       total_amount: totalAmount,
       status: order.status,

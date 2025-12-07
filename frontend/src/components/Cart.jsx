@@ -95,8 +95,8 @@ export const Cart = () => {
           className="bg-gray-500 text-white px-6 py-2 rounded-lg font-bold hover:bg-gray-700"
         >
           Continue Shopping
-        </button>
-        <button
+        </button > 
+        <button 
           onClick={handleCheckout}
           className="bg-primary text-white px-6 py-2 rounded-lg font-bold hover:bg-red-700"
         >

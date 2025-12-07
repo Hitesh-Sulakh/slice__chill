@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { authAPI } from '../utils/api';
 import { useAuthStore } from '../utils/store';
 
@@ -32,9 +32,14 @@ export const LoginForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg">
+    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg mt-10">
       <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Login</h2>
-      {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>}
+      
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+          {error}
+        </div>
+      )}
       
       <input
         type="email"
@@ -55,6 +60,12 @@ export const LoginForm = () => {
         required
         className="w-full mb-4 px-4 py-2 border rounded-lg focus:outline-none focus:border-primary"
       />
+      
+      <div className="mb-4 text-right">
+        <Link to="/forgot-password" className="text-primary text-sm hover:underline">
+          Forgot password?
+        </Link>
+      </div>
       
       <button
         type="submit"
@@ -100,11 +111,16 @@ export const SignupForm = () => {
     setLoading(true);
 
     try {
+      // Sign up
       await authAPI.signup(formData.username, formData.email, formData.password);
+      // Auto login after successful signup
       const { data } = await authAPI.login(formData.email, formData.password);
+      console.log("i hac=ve arrived in login page after signup");
+      
       login(data.user, data.token);
       navigate('/menu');
     } catch (err) {
+      setError(err.data.message||"signup failed");
       setError(err.response?.data?.message || 'Signup failed');
     } finally {
       setLoading(false);
@@ -112,7 +128,7 @@ export const SignupForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg">
+    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg mt-10">
       <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Sign Up</h2>
       {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>}
       

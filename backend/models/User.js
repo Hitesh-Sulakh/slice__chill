@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import bcryptjs from 'bcryptjs';
+import crypto from 'crypto';
 
 const userSchema = new mongoose.Schema({
   username: {
@@ -26,6 +27,28 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['admin', 'customer'],
     default: 'customer',
+  },
+  // Email verification fields
+  isEmailVerified: {
+    type: Boolean,
+    default: false,
+  },
+  emailVerificationToken: {
+    type: String,
+    select: false,
+  },
+  emailVerificationExpires: {
+    type: Date,
+    select: false,
+  },
+  // Password reset fields
+  passwordResetToken: {
+    type: String,
+    select: false,
+  },
+  passwordResetExpires: {
+    type: Date,
+    select: false,
   },
   createdAt: {
     type: Date,
@@ -55,10 +78,30 @@ userSchema.methods.comparePassword = async function (enteredPassword) {
   return await bcryptjs.compare(enteredPassword, this.password_hash);
 };
 
+// Generate email verification token
+userSchema.methods.generateEmailVerificationToken = function () {
+  const token = crypto.randomBytes(32).toString('hex');
+  this.emailVerificationToken = crypto.createHash('sha256').update(token).digest('hex');
+  this.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+  return token;
+};
+
+// Generate password reset token
+userSchema.methods.generatePasswordResetToken = function () {
+  const token = crypto.randomBytes(32).toString('hex');
+  this.passwordResetToken = crypto.createHash('sha256').update(token).digest('hex');
+  this.passwordResetExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+  return token;
+};
+
 // Method to get user data without password
 userSchema.methods.toJSON = function () {
   const obj = this.toObject();
   delete obj.password_hash;
+  delete obj.emailVerificationToken;
+  delete obj.emailVerificationExpires;
+  delete obj.passwordResetToken;
+  delete obj.passwordResetExpires;
   return obj;
 };
 

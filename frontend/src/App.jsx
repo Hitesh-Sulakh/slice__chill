@@ -7,6 +7,8 @@ import { Checkout } from './components/Checkout';
 import { OrderConfirmation } from './components/OrderConfirmation';
 import { OrderHistory } from './components/OrderHistory';
 import { LandingPage } from './components/LandingPage';
+import { VerifyEmail, ResendVerification } from './components/EmailVerification';
+import { ForgotPassword, ResetPassword } from './components/PasswordReset';
 import { useAuthStore } from './utils/store';
 
 const ProtectedRoute = ({ children }) => {
@@ -26,6 +28,15 @@ export default function App() {
           <Route path="/menu" element={<Menu />} />
           <Route path="/menu/:category" element={<Menu />} />
           <Route path="/cart" element={<Cart />} />
+          
+          {/* Email verification routes */}
+          <Route path="/verify-email/:token" element={<VerifyEmail />} />
+          <Route path="/resend-verification" element={<ResendVerification />} />
+          
+          {/* Password reset routes */}
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
+          
           <Route
             path="/checkout"
             element={

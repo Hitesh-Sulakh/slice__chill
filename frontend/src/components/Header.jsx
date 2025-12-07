@@ -19,6 +19,7 @@ export const Header = () => {
         <Link to="/" className="text-2xl font-bold text-secondary">
           🍕 Slice Chill
         </Link>
+        <div className="text-red-500 font-bold"> We are under maintenance</div>
 
         <nav className="flex gap-6 items-center">
           <Link to="/menu" className="hover:text-secondary transition">
