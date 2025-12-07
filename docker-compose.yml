@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: slice_chill_mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: slice_chill
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - slice_chill_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: slice_chill_backend
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: 5000
+      MONGODB_URI: mongodb://root:password@mongodb:27017/slice_chill?authSource=admin
+      JWT_SECRET: your_jwt_secret_key_change_in_production
+      API_KEY: slice_chill_api_key_change_in_production
+      NODE_ENV: production
+      FRONTEND_URL: http://localhost:3000
+    depends_on:
+      - mongodb
+    networks:
+      - slice_chill_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: slice_chill_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      VITE_API_URL: http://localhost:5000/api
+      VITE_API_KEY: slice_chill_api_key_change_in_production
+    depends_on:
+      - backend
+    networks:
+      - slice_chill_network
+
+volumes:
+  mongodb_data:
+
+networks:
+  slice_chill_network:
+    driver: bridge
